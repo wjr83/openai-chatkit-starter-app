@@ -9,17 +9,27 @@ export const workflowId = (() => {
   return id;
 })();
 
+export const workflowVersion = readEnvString(
+  import.meta.env.VITE_CHATKIT_WORKFLOW_VERSION
+);
+
 export function createClientSecretFetcher(
   workflow: string,
+  version?: string,
   endpoint = "/api/create-session"
 ) {
   return async (currentSecret: string | null) => {
     if (currentSecret) return currentSecret;
 
+    const workflowPayload: Record<string, string> = { id: workflow };
+    if (version) {
+      workflowPayload.version = version;
+    }
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workflow: { id: workflow } }),
+      body: JSON.stringify({ workflow: workflowPayload }),
     });
 
     const payload = (await response.json().catch(() => ({}))) as {

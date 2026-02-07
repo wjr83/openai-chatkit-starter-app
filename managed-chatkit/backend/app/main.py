@@ -44,8 +44,13 @@ async def create_session(request: Request) -> JSONResponse:
     if not workflow_id:
         return respond({"error": "Missing workflow id"}, 400)
 
+    workflow_version = resolve_workflow_version(body)
     user_id, cookie_value = resolve_user(request.cookies)
     api_base = chatkit_api_base()
+
+    workflow_payload: dict[str, str] = {"id": workflow_id}
+    if workflow_version:
+        workflow_payload["version"] = workflow_version
 
     try:
         async with httpx.AsyncClient(base_url=api_base, timeout=10.0) as client:
@@ -56,7 +61,7 @@ async def create_session(request: Request) -> JSONResponse:
                     "OpenAI-Beta": "chatkit_beta=v1",
                     "Content-Type": "application/json",
                 },
-                json={"workflow": {"id": workflow_id}, "user": user_id},
+                json={"workflow": workflow_payload, "user": user_id},
             )
     except httpx.RequestError as error:
         return respond(
@@ -139,6 +144,21 @@ def resolve_workflow_id(body: Mapping[str, Any]) -> str | None:
         workflow_id = env_workflow
     if workflow_id and isinstance(workflow_id, str) and workflow_id.strip():
         return workflow_id.strip()
+    return None
+
+
+def resolve_workflow_version(body: Mapping[str, Any]) -> str | None:
+    workflow = body.get("workflow", {})
+    version = None
+    if isinstance(workflow, Mapping):
+        version = workflow.get("version")
+    env_version = os.getenv("CHATKIT_WORKFLOW_VERSION") or os.getenv(
+        "VITE_CHATKIT_WORKFLOW_VERSION"
+    )
+    if not version and env_version:
+        version = env_version
+    if version and isinstance(version, str) and version.strip():
+        return version.strip()
     return None
 
 

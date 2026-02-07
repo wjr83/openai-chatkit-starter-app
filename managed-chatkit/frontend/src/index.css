@@ -1,34 +1,835 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────
+   Design tokens
+   ───────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand:        #353CED;
+  --brand-50:     rgba(53, 60, 237, 0.04);
+  --brand-100:    rgba(53, 60, 237, 0.08);
+  --brand-200:    rgba(53, 60, 237, 0.14);
+  --brand-300:    rgba(53, 60, 237, 0.30);
+  --brand-400:    rgba(53, 60, 237, 0.55);
+
+  --surface:       #ffffff;
+  --surface-raised:#fafbfe;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+
+  --text-1: #111129;
+  --text-2: #4a4b6a;
+  --text-3: #8b8da8;
+
+  --border-subtle:  rgba(53, 60, 237, 0.06);
+  --border-default: rgba(53, 60, 237, 0.10);
+  --border-strong:  rgba(53, 60, 237, 0.22);
+
+  --radius-sm:  8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
   color-scheme: light;
 }
 
-:root[data-color-scheme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  color-scheme: dark;
+/* ─────────────────────────────────────────────
+   Reset
+   ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+html, body, #root { height: 100%; }
+
+body {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--surface-raised);
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-color-scheme]) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    color-scheme: dark;
+/* ─────────────────────────────────────────────
+   App shell
+   ───────────────────────────────────────────── */
+.app-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+
+/* Subtle dot grid — fades toward edges */
+.grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(53, 60, 237, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Ambient orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.orb-1 {
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  left: -160px;
+  background: radial-gradient(circle, rgba(53, 60, 237, 0.06), transparent 65%);
+  filter: blur(100px);
+  animation: drift 30s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 480px;
+  height: 480px;
+  bottom: -140px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.05), transparent 65%);
+  filter: blur(100px);
+  animation: drift 36s ease-in-out infinite reverse;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(20px, -14px) scale(1.02); }
+  50%  { transform: translate(-10px, 8px) scale(0.98); }
+  75%  { transform: translate(14px, 6px) scale(1.01); }
+}
+
+/* ─────────────────────────────────────────────
+   Content column
+   ───────────────────────────────────────────── */
+.app-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1020px;
+  height: 100vh;
+  padding: 18px 28px 14px;
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   Header — frosted glass
+   ───────────────────────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.header-logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  animation: pulse-status 2s ease-in-out infinite;
+}
+
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+  50%      { opacity: 0.5; box-shadow: 0 0 4px rgba(34, 197, 94, 0.3); }
+}
+
+/* ─────────────────────────────────────────────
+   Main body — pipeline sidebar + interface frame
+   ───────────────────────────────────────────── */
+.main-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  padding-top: 14px;
+}
+
+/* ─────────────────────────────────────────────
+   Vertical pipeline — left sidebar
+   ───────────────────────────────────────────── */
+.pipeline {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  position: relative;
+  width: 56px;
+  padding: 24px 0;
+}
+
+/* Vertical connecting track */
+.pipeline-track {
+  position: absolute;
+  top: 32px;
+  bottom: 32px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, var(--border-strong) 10%, var(--border-strong) 90%, transparent);
+}
+
+/* Sweeping data pulse along the vertical track */
+.pipeline::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  width: 10px;
+  height: 60px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, var(--brand-400) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: pipeline-sweep-v 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pipeline-sweep-v {
+  0%   { top: 24px; opacity: 0; }
+  8%   { opacity: 0.8; }
+  88%  { opacity: 0.8; }
+  100% { top: calc(100% - 84px); opacity: 0; }
+}
+
+.pipeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+.node-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--brand-300);
+  transition: all 0.4s ease;
+}
+
+/* Idle state: default cascade animation */
+.pipeline-node-idle .node-dot {
+  animation: node-pulse 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.65s);
+}
+
+@keyframes node-pulse {
+  0%, 100% {
+    background: var(--surface);
+    border-color: var(--brand-300);
+    box-shadow: none;
+  }
+  15%, 30% {
+    background: var(--brand);
+    border-color: var(--brand);
+    box-shadow: 0 0 12px var(--brand-400);
   }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-mono: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+/* Active processing states */
+.pipeline-node-queued .node-dot {
+  background: var(--surface);
+  border-color: var(--border-default);
+  box-shadow: none;
+  animation: none;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+.pipeline-node-active .node-dot {
+  background: var(--brand);
+  border-color: var(--brand);
+  box-shadow: 0 0 12px var(--brand-400);
+  animation: stage-active-glow 1s ease-in-out infinite;
+}
+
+@keyframes stage-active-glow {
+  0%, 100% { box-shadow: 0 0 8px var(--brand-400); }
+  50%      { box-shadow: 0 0 18px var(--brand-300); }
+}
+
+.pipeline-node-complete .node-dot {
+  background: #22c55e;
+  border-color: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+  animation: none;
+}
+
+.node-label {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  backdrop-filter: blur(8px) saturate(1.2);
+  border: 1px solid var(--border-subtle);
+}
+
+.pipeline-node-active .node-label {
+  color: var(--brand);
+  background: rgba(53, 60, 237, 0.08);
+  border-color: var(--brand-200);
+}
+
+.pipeline-node-complete .node-label {
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+/* ─────────────────────────────────────────────
+   Interface frame — the main container
+   ───────────────────────────────────────────── */
+.interface-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  box-shadow:
+    0 0 0 0.5px var(--border-subtle),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 16px rgba(0, 0, 0, 0.025),
+    0 16px 48px rgba(53, 60, 237, 0.035);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.interface-frame:focus-within {
+  border-color: var(--brand-200);
+  box-shadow:
+    0 0 0 3px var(--brand-50),
+    0 0 0 1px var(--brand-200),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 16px rgba(53, 60, 237, 0.05),
+    0 16px 48px rgba(53, 60, 237, 0.05);
+}
+
+/* Console wrapper */
+.chatkit-console-wrapper {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ChatKit fills the frame */
+.chatkit-widget {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+/* ─────────────────────────────────────────────
+   ChatKit overrides — force light theme everywhere
+   ───────────────────────────────────────────── */
+openai-chatkit {
+  color-scheme: light !important;
+  --ock-color-surface: #ffffff !important;
+  --ock-color-surface-secondary: #fafbfe !important;
+  --ock-color-bg: #ffffff !important;
+  --ock-color-bg-secondary: #fafbfe !important;
+  --ock-color-text: #111129 !important;
+  --ock-color-text-secondary: #4a4b6a !important;
+  --ock-composer-bg: #ffffff !important;
+  --ock-input-bg: #fafbfe !important;
+}
+
+/* Minimal header — only show history icon */
+openai-chatkit::part(header) {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding: 6px 12px !important;
+  min-height: 0 !important;
+  justify-content: flex-end !important;
+}
+
+openai-chatkit::part(header-title) {
+  display: none !important;
+}
+
+/* Force light on any textarea inside the ChatKit component */
+.chatkit-console-wrapper textarea,
+.chatkit-widget textarea {
+  background: #fafbfe !important;
+  color: #111129 !important;
+  border-color: rgba(53, 60, 237, 0.10) !important;
+  caret-color: #353CED !important;
+}
+
+/* ─────────────────────────────────────────────
+   Footer
+   ───────────────────────────────────────────── */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  padding: 10px 0 4px;
+  flex-shrink: 0;
+  letter-spacing: 0.015em;
+}
+
+.app-footer::before {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-default));
+  margin-right: 4px;
+}
+
+.app-footer::after {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-default), transparent);
+  margin-left: 4px;
+}
+
+/* ─────────────────────────────────────────────
+   Processing HUD — run overlay
+   ───────────────────────────────────────────── */
+.processing-hud {
+  position: relative;
+  z-index: 5;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, var(--surface-raised), var(--surface));
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  animation: hud-in 0.15s ease-out both;
+  flex-shrink: 0;
+}
+
+.hud-complete {
+  padding: 6px 16px;
+  gap: 0;
+}
+
+.hud-complete .hud-timeline,
+.hud-complete .hud-telemetry {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  transition: all 0.4s ease;
+}
+
+@keyframes hud-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hud-databus {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--brand-100), transparent);
+  animation: databus-sweep 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes databus-sweep {
+  0%   { transform: translateX(-120px); }
+  100% { transform: translateX(calc(100vw)); }
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hud-run-id {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.hud-status-badge {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.badge-active {
+  background: rgba(53, 60, 237, 0.1);
+  color: var(--brand);
+  animation: badge-pulse 1.5s ease-in-out infinite;
+}
+
+.badge-done {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+.hud-timeline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.4s ease;
+}
+
+.hud-stage {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.hud-stage-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.hud-stage-queued .hud-stage-indicator {
+  border-color: var(--border-default);
+  background: transparent;
+}
+
+.hud-stage-active .hud-stage-indicator {
+  border-color: var(--brand);
+  background: var(--brand);
+  box-shadow: 0 0 8px var(--brand-400);
+  animation: stage-active-glow 1s ease-in-out infinite;
+}
+
+.hud-stage-complete .hud-stage-indicator {
+  border-color: #22c55e;
+  background: #22c55e;
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
+}
+
+.hud-stage-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.hud-stage-active .hud-stage-label {
+  color: var(--brand);
+}
+
+.hud-stage-complete .hud-stage-label {
+  color: #16a34a;
+}
+
+.hud-telemetry {
+  display: flex;
+  gap: 16px;
+  transition: all 0.4s ease;
+}
+
+.hud-tel-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hud-tel-key {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.hud-tel-val {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-2);
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.tel-active {
+  color: var(--brand);
+}
+
+/* ─────────────────────────────────────────────
+   ChatKit message overrides — artifact cards
+   ───────────────────────────────────────────── */
+
+/* Remove all chat-like bubble styling, avatars, alignment */
+openai-chatkit::part(thread-item) {
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 !important;
+}
+
+openai-chatkit::part(avatar) {
+  display: none !important;
+}
+
+openai-chatkit::part(message-bubble) {
+  max-width: 100% !important;
+  border-radius: var(--radius-md) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* User message → INPUT SPEC card */
+openai-chatkit::part(user-message) {
+  background: var(--surface-raised) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 14px 18px !important;
+  margin-bottom: 8px !important;
+  position: relative !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+}
+
+/* Assistant message → OUTPUT MODULE card */
+openai-chatkit::part(assistant-message) {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-left: 3px solid var(--brand) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px 20px !important;
+  margin-bottom: 12px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Hide "User" / "Assistant" labels */
+openai-chatkit::part(sender-name) {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   Composer "Spec Bar" — premium input
+   ───────────────────────────────────────────── */
+openai-chatkit::part(composer) {
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border-default) !important;
+  padding: 12px 16px !important;
+}
+
+openai-chatkit::part(composer-input) {
+  background: var(--surface-raised) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 14px 18px !important;
+  font-size: 14px !important;
+  color: var(--text-1) !important;
+  caret-color: var(--brand) !important;
+  min-height: 52px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+openai-chatkit::part(composer-input):focus {
+  border-color: var(--brand-200) !important;
+  box-shadow: 0 0 0 3px var(--brand-50) !important;
+  outline: none !important;
+}
+
+openai-chatkit::part(composer-input)::placeholder {
+  color: var(--text-3) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* ─────────────────────────────────────────────
+   Send button — SAIL logo icon
+   ───────────────────────────────────────────── */
+openai-chatkit::part(send-button) {
+  background: var(--brand) !important;
+  background-image: url('/sail_logo_transparent_white.png') !important;
+  background-position: center !important;
+  background-size: 22px 22px !important;
+  background-repeat: no-repeat !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  width: 42px !important;
+  height: 42px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+openai-chatkit::part(send-button):hover {
+  background-color: #2a30d4 !important;
+  box-shadow: 0 2px 12px rgba(53, 60, 237, 0.3) !important;
+}
+
+/* Hide default arrow icon inside send button */
+openai-chatkit::part(send-button-icon) {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   Hide ChatKit start screen (ConsoleDock owns it)
+   ───────────────────────────────────────────── */
+openai-chatkit::part(start-screen) {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   Thread area — remove chat feel
+   ───────────────────────────────────────────── */
+openai-chatkit::part(thread) {
+  padding: 16px !important;
+  gap: 12px !important;
+}
+
+/* ─────────────────────────────────────────────
+   Responsive
+   ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .app-content {
+    padding: 12px 14px 10px;
+  }
+
+  .app-header {
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+  }
+
+  .header-logo {
+    height: 22px;
+  }
+
+  /* Pipeline collapses to horizontal on mobile */
+  .main-body {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pipeline {
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    padding: 10px 12px;
+    justify-content: space-between;
+  }
+
+  .pipeline-track {
+    top: 50%;
+    bottom: auto;
+    left: 28px;
+    right: 28px;
+    width: auto;
+    height: 1px;
+    transform: translateY(-50%);
+  }
+
+  .pipeline::after {
+    top: 50%;
+    left: 24px;
+    width: 60px;
+    height: 10px;
+    transform: translateY(-50%);
+    animation: pipeline-sweep-h 3.6s ease-in-out infinite;
+  }
+
+  .node-label {
+    font-size: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .node-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .interface-frame {
+    border-radius: var(--radius-md);
+  }
+
+  .hud-telemetry {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@keyframes pipeline-sweep-h {
+  0%   { left: 24px; opacity: 0; }
+  8%   { opacity: 0.8; }
+  88%  { opacity: 0.8; }
+  100% { left: calc(100% - 84px); opacity: 0; }
 }

@@ -3,6 +3,6 @@
   "outputDirectory": "frontend/dist",
   "framework": null,
   "rewrites": [
-    { "source": "/api/create-session", "destination": "/api/create-session" }
+    { "source": "/api/(.*)", "destination": "/api" }
   ]
 }

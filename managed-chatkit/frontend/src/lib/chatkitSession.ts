@@ -13,6 +13,10 @@ export const workflowVersion = readEnvString(
   import.meta.env.VITE_CHATKIT_WORKFLOW_VERSION
 );
 
+export const domainKey =
+  readEnvString(import.meta.env.VITE_CHATKIT_API_DOMAIN_KEY) ??
+  "domain_pk_localhost_dev";
+
 export function createClientSecretFetcher(
   workflow: string,
   version?: string,
